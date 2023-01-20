@@ -21,7 +21,7 @@
         }
         .title{
             color: #00a2ff;
-            font-family: fantasy;
+            font-family: wonder;
             font-size: 40px;            
         }
         .registration{
@@ -79,24 +79,34 @@
             top: 40px;
             left: -50px;
             border: 2px solid black;
-            background-color: white;
+            background-color: #E1FF88;
             width: 300px;
             height: 300px;
         } 
     </style>
     <script>
-        var arr_x = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300];
-        var arr_y = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150];
+        var arr_x = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270];
+        var arr_y = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135];
+        var snake_x = [];
+        var snake_y = [];
+        var score = 0;
+        var direction = "right";
+        var ctx;
+        var food_x;
+        var food_y;
+        var eating = false;
+        let player_name; 
+        let interval;
 
             function startGame(){
             let main_block = document.querySelector(".registration"); 
             let player_score = document.querySelector(".eyn");        
             let input_field = document.querySelector(".name_input");
-            let player_name = input_field.value;
+            player_name = input_field.value;
 
             input_field.remove();
 
-            document.querySelector(".eyn").innerHTML = player_name + "," + " " + "ваш счёт:";
+            document.querySelector(".eyn").innerHTML = player_name + "," + " " + "ваш счёт:" + " " + score;
             
             main_block.style.width = "750px";
             main_block.style.marginLeft = "300px";
@@ -111,44 +121,166 @@
             startPlay(game_field);
         }
 
-        function startPlay(game_field){
-            let direction = "right"; 
-            let ctx = game_field.getContext("2d");
+        function startPlay(game_field){            
+            ctx = game_field.getContext("2d");
             let begin_x = Math.floor(Math.random() * 10);
+            snake_x.push(arr_x[begin_x]);            
             let begin_y = Math.floor(Math.random() * 10);
+            snake_y.push(arr_y[begin_y]);            
+            createFood();
+            ctx.fillStyle = "orange";
+            ctx.fillRect(arr_x[food_x], arr_y[food_y], 30, 15);             
             ctx.fillStyle = "brown";
-            ctx.fillRect(arr_x[begin_x], arr_y[begin_y], 30, 15);
+            ctx.fillRect(arr_x[begin_x], arr_y[begin_y], 30, 15);                        
             document.addEventListener('keyup', function(event) {
                 switch (event.code) {
                     case 'KeyW':
-                        direction = "up";
+                        if (direction != "down"){
+                            direction = "up";                            
+                        }                        
                         break;
                     case 'KeyS':
-                        direction = "down";
+                        if (direction != "up"){
+                            direction = "down";                            
+                        }                        
                         break;
                     case 'KeyA':
-                        direction = "left";
+                    if (direction != "right"){
+                        direction = "left";                        
+                    }                        
                         break;
                     case 'KeyD':
-                        direction = "right";
+                    if (direction != "left"){
+                        direction = "right";                        
+                    }                        
                         break;        
                     default:
                         // nothing, heheehehehehe
                         break;
                 }
             });
-
+            interval = setInterval(moveSnake, 500);
         }
 
-        function MoveSnake(direction) {
+        function moveSnake() {                                   
             switch (direction) {
-                case "right":
-                ctx.fillRect(arr_x[begin_x], arr_y[begin_y], 30, 15);
+                case "right":                    
+                    snake_x.push(snake_x[score] + 30);
+                    snake_y.push(snake_y[score]);                    
+                    ctx.fillStyle = "brown";                    
+                    ctx.fillRect(snake_x[score + 1], snake_y[score + 1], 30, 15);
+                    checkConditions(); 
+                    drawFood();
+                    needToClear();                   
                     break;
-            
+                case "left":                    
+                    snake_x.push(snake_x[score] - 30);
+                    snake_y.push(snake_y[score]);                    
+                    ctx.fillStyle = "brown";                   
+                    ctx.fillRect(snake_x[score + 1], snake_y[score + 1], 30, 15);
+                    checkConditions(); 
+                    drawFood();
+                    needToClear();                    
+                    break;
+                case "up":                    
+                    snake_x.push(snake_x[score]);
+                    snake_y.push(snake_y[score] - 15);                     
+                    ctx.fillStyle = "brown";                  
+                    ctx.fillRect(snake_x[score + 1], snake_y[score + 1], 30, 15);
+                    checkConditions(); 
+                    drawFood();
+                    needToClear();                    
+                    break;
+                case "down":                    
+                    snake_x.push(snake_x[score]);
+                    snake_y.push(snake_y[score] + 15);                   
+                    ctx.fillStyle = "brown";                    
+                    ctx.fillRect(snake_x[score + 1], snake_y[score + 1], 30, 15);
+                    checkConditions();
+                    drawFood();
+                    needToClear();                 
+                    break;        
                 default:
                     break;
             }
+            
+        }
+
+        function checkConditions() {            
+            if (snake_x[snake_x.length - 1] == arr_x[food_x] && snake_y[snake_y.length - 1] == arr_y[food_y]){
+                createFood();                
+                score++;
+                document.querySelector(".eyn").innerHTML = player_name + "," + " " + "ваш счёт:" + " " + score;
+                eating = true;                
+            } else if(snake_x[snake_x.length - 1] == 300 || snake_x[snake_x.length - 1] == -30 || snake_y[snake_y.length - 1] == -15 || snake_y[snake_y.length - 1] == 150){            
+                clearInterval(interval);
+                ctx.clearRect(0, 0, 300, 150);
+                alert('Игра окончена');
+                             
+            } else {
+               
+                for (let index = score; index >= 0; index--) {                    
+                    if (snake_x[snake_x.length - 1] == snake_x[index] && snake_y[snake_y.length - 1] == snake_y[index]){                                              
+                        clearInterval(interval);
+                        ctx.clearRect(0, 0, 300, 150);
+                        alert('Игра окончена');
+                                              
+                        break;
+                    }
+                    
+                }
+
+            }
+        }
+
+        function createFood(){            
+            food_x = Math.floor(Math.random() * 10);
+            food_y = Math.floor(Math.random() * 10);
+            for (let check_number = score; check_number >= 0; check_number--){                
+                if(arr_x[food_x] == snake_x[check_number] && arr_y[food_y] == snake_y[check_number]){
+                    createFood();                                       
+                    break;                    
+                }
+            } 
+            
+        }
+
+        function drawFood() {  
+            if (eating == true) {
+                ctx.fillStyle = "orange";
+                ctx.fillRect(arr_x[food_x], arr_y[food_y], 30, 15);                                 
+            } 
+                        
+        }
+
+        function needToClear() {
+            if (eating == false){
+                ctx.clearRect(snake_x[0], snake_y[0], 30, 15);
+                snake_x.shift();
+                snake_y.shift();   
+            } else{
+                eating = false;
+            }
+        }
+
+        function restartGame() {
+            score = 0;
+            snake_x.length = 0;
+            snake_y.length = 0;
+            direction = "right";
+            let begin_x = Math.floor(Math.random() * 10);
+            snake_x.push(arr_x[begin_x]);            
+            let begin_y = Math.floor(Math.random() * 10);
+            snake_y.push(arr_y[begin_y]);            
+            createFood();
+            ctx.fillStyle = "orange";
+            ctx.fillRect(arr_x[food_x], arr_y[food_y], 30, 15);             
+            ctx.fillStyle = "brown";
+            ctx.fillRect(snake_x[0], snake_y[0], 30, 15);
+            console.log(arr_x[begin_x], arr_y[begin_y]);
+            document.querySelector(".eyn").innerHTML = player_name + "," + " " + "ваш счёт:" + " " + score; 
+            interval = setInterval(moveSnake, 500); 
+            console.log("game has restarted");
         }
             
     </script>
